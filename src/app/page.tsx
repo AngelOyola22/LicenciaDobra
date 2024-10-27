@@ -1,101 +1,219 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useRef } from 'react'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ToastProvider } from "@/components/ui/toast"
+import { Toaster } from "@/components/ui/toaster"
+import { useToast } from "@/hooks/use-toast"
+import { Copy, ArrowRight, Send } from 'lucide-react'
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [inputCode, setInputCode] = useState('')
+  const [outputCode, setOutputCode] = useState('')
+  const { toast } = useToast()
+  const outputRef = useRef<HTMLParagraphElement>(null)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+  const processActivationCode = (code: string) => {
+    if (!code.trim()) {
+      toast({
+        title: "Código incompleto",
+        description: "Por favor, ingrese un código válido.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    let lcSerialNumber = code.replace(/-/g, '')
+
+    // Paso 1: Desempaquetar caracteres
+    let lcUnPacketSerialNumber = ''
+    for (let i = 0; i < lcSerialNumber.length; i++) {
+      const lcCar = lcSerialNumber.charAt(i)
+      const charCode = lcCar.charCodeAt(0)
+      if (charCode >= 65 && charCode <= 90) {
+        lcUnPacketSerialNumber += (charCode - 20).toString().padStart(2, '0')
+      } else {
+        lcUnPacketSerialNumber += lcCar
+      }
+    }
+    lcSerialNumber = lcUnPacketSerialNumber
+
+    // Paso 2: Desempaquetar el Desplazamiento (rotar a la izquierda seis veces)
+    const lnDX = 12
+    for (let j = 0; j < 6; j++) {
+      lcSerialNumber = lcSerialNumber.slice(-lnDX) + lcSerialNumber.slice(0, -lnDX)
+    }
+
+    // Paso 3: Quitar Número de Contrato
+    let lcProductNumber = ''
+    const lnLen = parseInt(lcSerialNumber.charAt(0), 10)
+    lcSerialNumber = '*' + lcSerialNumber.slice(1)
+    for (let i = 1; i <= lnLen; i++) {
+      const index = (i + 1) * 3
+      if (index < lcSerialNumber.length) {
+        lcProductNumber += lcSerialNumber.charAt(index - 1)
+        lcSerialNumber = lcSerialNumber.slice(0, index - 1) + '*' + lcSerialNumber.slice(index)
+      }
+    }
+    lcSerialNumber = lcSerialNumber.replace(/\*/g, '')
+    lcProductNumber = parseInt(lcProductNumber, 10).toString().padStart(10, '0')
+
+    // Paso 4
+    let lcActivationCode = lcSerialNumber
+    const lnLen2 = lcProductNumber.slice(0, 10).replace(/^0+/, '').length
+
+    lcActivationCode = lnLen2.toString() + lcActivationCode
+
+    for (let i = 0; i < lnLen2; i++) {
+      const lcCar = lcProductNumber.charAt((10 - lnLen2) + i)
+      const index = (i * 3) + 5
+      lcActivationCode = lcActivationCode.slice(0, index) + lcCar + lcActivationCode.slice(index)
+    }
+
+    // Paso 5: Poner al revés
+    lcActivationCode = lcActivationCode.split('').reverse().join('')
+
+    // Paso 6: Rotar por la izquierda cinco veces
+    for (let j = 0; j < 6; j++) {
+      lcActivationCode = lcActivationCode.slice(lnDX) + lcActivationCode.slice(0, lnDX)
+    }
+
+    // Paso 7: Empaquetar con caracteres
+    let lcPacketActivationCode = ''
+    for (let i = 0; i < lcActivationCode.length; i += 2) {
+      const lcTwins = lcActivationCode.substring(i, i + 2)
+      const numVal = parseInt(lcTwins, 10)
+      if (numVal + 25 >= 65 && numVal + 25 <= 90) {
+        lcPacketActivationCode += String.fromCharCode(numVal + 25)
+      } else {
+        lcPacketActivationCode += lcTwins
+      }
+    }
+    lcActivationCode = lcPacketActivationCode
+
+    // Paso 8: Colocar divisor cada seis caracteres
+    let lcSeparatedActivationCode = lcActivationCode.slice(0, 6)
+    for (let i = 6; i < lcActivationCode.length; i += 6) {
+      lcSeparatedActivationCode += '-' + lcActivationCode.slice(i, i + 6)
+    }
+    lcActivationCode = lcSeparatedActivationCode
+
+    setOutputCode(lcActivationCode)
+  }
+
+  const copyToClipboard = async () => {
+    if (!outputCode) return;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        // Para navegadores modernos
+        await navigator.clipboard.writeText(outputCode);
+        toast({
+          title: "Código copiado",
+          description: "El código de activación ha sido copiado al portapapeles.",
+        });
+      } else {
+        // Fallback para navegadores más antiguos
+        const textArea = document.createElement("textarea");
+        textArea.value = outputCode;
+        textArea.style.position = "fixed";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          toast({
+            title: "Código copiado",
+            description: "El código de activación ha sido copiado al portapapeles.",
+          });
+        } catch (err) {
+          console.error('Fallback: Oops, unable to copy', err);
+          toast({
+            title: "Error al copiar",
+            description: "No se pudo copiar el código. Por favor, cópielo manualmente.",
+            variant: "destructive",
+          });
+        }
+        document.body.removeChild(textArea);
+      }
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      toast({
+        title: "Error al copiar",
+        description: "No se pudo copiar el código. Por favor, cópielo manualmente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const sendWhatsApp = () => {
+    if (!outputCode) return;
+    
+    const message = encodeURIComponent(`Código de activación: ${outputCode}`);
+    const whatsappUrl = `https://wa.me/?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  return (
+    <ToastProvider>
+      <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center text-primary">Procesador de Código de Activación</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="input-code" className="text-sm font-medium text-gray-700">
+                  Ingrese el código:
+                </label>
+                <Input
+                  id="input-code"
+                  type="text"
+                  value={inputCode}
+                  onChange={(e) => setInputCode(e.target.value)}
+                  placeholder="Ingrese el código"
+                  className="w-full"
+                />
+              </div>
+              <Button 
+                onClick={() => processActivationCode(inputCode)}
+                className="w-full"
+              >
+                Procesar Código
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              {outputCode && (
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold text-gray-700">Código de salida:</h2>
+                  <div className="p-3 bg-gray-100 rounded-md">
+                    <p ref={outputRef} className="text-lg font-mono break-all">{outputCode}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={copyToClipboard}
+                      className="flex-1"
+                    >
+                      Copiar
+                      <Copy className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={sendWhatsApp}
+                      className="flex-1"
+                    >
+                      Enviar por WhatsApp
+                      <Send className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      <Toaster />
+    </ToastProvider>
+  )
 }
